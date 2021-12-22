@@ -1,12 +1,10 @@
 import { Connection } from 'mysql'
-import { IConnectConfigOptions, IField, IRecords } from './types'
+import { IConnectConfigOptions, IField, IRecords, IResultRecords } from './types'
 
-import * as events from 'events'
 import * as mysql from 'mysql'
 import * as qs from 'querystringify'
+import EventEmitter from './EventEmitter'
 const { isArray } = require('where-type')
-
-let parseInstance: MysqlParse | null
 
 /**
  * @author lihh
@@ -23,7 +21,7 @@ const sqlSplicing = (fields: IField[]): string => {
   return arr.join(', ')
 }
 
-class MysqlParse extends events.EventEmitter {
+class MysqlParse extends EventEmitter {
   public db: Connection | null = null
   constructor(host: string, user: string, password: string, database: string)
   constructor(host: IConnectConfigOptions, user?: string, password?: string, database?: string)
@@ -41,12 +39,6 @@ class MysqlParse extends events.EventEmitter {
       this.user = user
       this.password = password
       this.database = database
-    }
-
-    if (parseInstance === null) {
-      parseInstance = this
-    } else {
-      return parseInstance
     }
   }
 
@@ -87,13 +79,41 @@ class MysqlParse extends events.EventEmitter {
   /**
    * @author lihh
    * @description 内部用来订阅log用
-   * @param type 操作表类型
    * @param record 以及操作表记录
    */
-  private logRecords(type: string, record: string) {
+  private logRecords(record: string) {
     this.emit('mysql-log', {
-      type,
       record
+    })
+  }
+
+  /**
+   * @author lihh
+   * @description 共同查询 无论是单条数据 还是多条数据
+   * @param fields 查询的字段
+   * @param tableName 需要的表名
+   * @param where 以及查询的条件
+   */
+  private comQuery(fields: IField[], tableName: string, where: IRecords): Promise<{ sql: string; data: IRecords[] }> {
+    return new Promise((resolve, reject) => {
+      let sql = `select ${sqlSplicing(fields)} from ${tableName}`
+      if (where && typeof where === 'object' && Object.keys(where).length > 0) {
+        sql += ` where ${qs.stringify(where)}`
+      }
+
+      // 进行数据查询
+      this.db?.query(sql, (err, results: IResultRecords[]) => {
+        if (err) {
+          this.emit('error', err, sql)
+          return reject(err)
+        }
+
+        const result = isArray(results) && results.length > 0 ? results : []
+        resolve({
+          sql,
+          data: result
+        })
+      })
     })
   }
 
@@ -104,21 +124,24 @@ class MysqlParse extends events.EventEmitter {
    * @param tableName 需要的表名
    * @param where 以及查询的条件
    */
-  findOne(fields: IField[], tableName: string, where: IRecords): Promise<any> {
-    return new Promise((resolve, reject) => {
-      const sql = `select ${sqlSplicing(fields)} from ${tableName} where ${qs.stringify(where)}`
+  async findOne(fields: IField[], tableName: string, where: IRecords): Promise<any> {
+    const { sql, data } = await this.comQuery(fields, tableName, where)
+    this.logRecords(sql)
 
-      // 进行数据查询
-      this.db?.query(sql, (err, results) => {
-        if (err) {
-          this.emit('error', err, sql)
-          return reject(err)
-        }
+    return data.length > 0 ? data[0] : data
+  }
 
-        this.logRecords('findOne', sql)
-        resolve(isArray(results) && results.length > 0 ? results[0]['solution'] : [])
-      })
-    })
+  /**
+   * @author lihh
+   * @description 用来查询多条数据
+   * @param fields 查询的字段
+   * @param tableName 需要的表名
+   * @param where 以及查询的条件
+   */
+  async find(fields: IField[], tableName: string, where: IRecords): Promise<any> {
+    const { sql, data } = await this.comQuery(fields, tableName, where)
+    this.logRecords(sql)
+    return data
   }
 
   /**
