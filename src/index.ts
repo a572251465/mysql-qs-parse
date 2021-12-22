@@ -1,12 +1,27 @@
 import { Connection } from 'mysql'
 import { IConnectConfigOptions, IField, IRecords } from './types'
 
-// import Events = require('events')
-// const EventEmitter = require('events')
 import * as events from 'events'
 import * as mysql from 'mysql'
+import * as qs from 'querystringify'
+const { isArray } = require('where-type')
 
 let parseInstance: MysqlParse | null
+
+/**
+ * @author lihh
+ * @description 进行sql查询字段的拼接
+ * @param fields 表示需要查询的字段 允许别名
+ */
+const sqlSplicing = (fields: IField[]): string => {
+  const arr = fields.map((item) => {
+    if (typeof item === 'string') return item
+
+    const values = Object.keys(item).map((cur) => `${cur} as ${item[cur]}`)
+    return values.join(',')
+  })
+  return arr.join(', ')
+}
 
 class MysqlParse extends events.EventEmitter {
   public db: Connection | null = null
@@ -71,12 +86,40 @@ class MysqlParse extends events.EventEmitter {
 
   /**
    * @author lihh
+   * @description 内部用来订阅log用
+   * @param type 操作表类型
+   * @param record 以及操作表记录
+   */
+  private logRecords(type: string, record: string) {
+    this.emit('mysql-log', {
+      type,
+      record
+    })
+  }
+
+  /**
+   * @author lihh
    * @description 进行单个数据查询
    * @param fields 查询的字段
    * @param tableName 需要的表名
    * @param where 以及查询的条件
    */
-  findOne(fields: IField, tableName: string, where: IRecords) {}
+  findOne(fields: IField[], tableName: string, where: IRecords): Promise<any> {
+    return new Promise((resolve, reject) => {
+      const sql = `select ${sqlSplicing(fields)} from ${tableName} where ${qs.stringify(where)}`
+
+      // 进行数据查询
+      this.db?.query(sql, (err, results) => {
+        if (err) {
+          this.emit('error', err, sql)
+          return reject(err)
+        }
+
+        this.logRecords('findOne', sql)
+        resolve(isArray(results) && results.length > 0 ? results[0]['solution'] : [])
+      })
+    })
+  }
 
   /**
    * @author lihh
