@@ -1,4 +1,4 @@
-<img src="/docs/logo.png" alt="Koa middleware framework for nodejs"/>
+![个人logo](http://lihh-core.top/images/mysql-qs-parse.png)
 > 一款能够自由操作mysql语句的插件，简直是增删改查无所不能（A plug-in that can freely operate MySQL is omnipotent）
 
 ### 为什么使用（Why）
