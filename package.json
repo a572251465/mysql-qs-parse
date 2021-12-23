@@ -1,13 +1,14 @@
 {
   "name": "mysql-qs-parse",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
     "build": "rollup -c build/rollup.config.js "
   },
   "files": [
-    "dist"
+    "dist",
+    "docs"
   ],
   "keywords": [
     "mysql",
