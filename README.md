@@ -1,5 +1,5 @@
 <img src="/docs/logo.png" alt="Koa middleware framework for nodejs"/>
-> 一款能够自由操作mysql语句的插件，简直是增删改查无所不能（A plug-in that can freely operate MySQL is omnipotent）
+> <p>一款能够自由操作mysql语句的插件，简直是增删改查无所不能（A plug-in that can freely operate MySQL is omnipotent）</p>
 
 ### 为什么使用（Why）
 * Mysql-Qs-Parse 基于发布订阅来实现，所有的响应都可以通过订阅来做
@@ -93,7 +93,7 @@ const res = await db.find(['name', 'id'], 'User', {age: 20})
   * **`tableName`属性表示更新的表**
   * **`where`属性表示操作的条件，跟函数`findOne`含义一致**
   * **`fields`属性表示逻辑删除时更新的字段，逻辑删除必须的**
-* **<font color = red>后续还有很多功能推出(例如：排序，分页，多表查询，复杂查询等)...</font>**
+* **<font color=red>后续还有很多功能推出(例如：排序，分页，多表查询，复杂查询等)...</font>**
 ## 联系我
 ![个人logo](http://lihh-core.top/images/personal-logo.jpeg)
  * [GitHub](https://github.com/a572251465)
