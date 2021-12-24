@@ -16,7 +16,7 @@ module.exports = {
       include: ['src/**/*.ts'],
       exclude: ['node_modules'],
       tslib: 'es5'
-    })
-    // terser()
+    }),
+    terser()
   ]
 }

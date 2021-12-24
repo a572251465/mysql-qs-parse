@@ -1,5 +1,5 @@
-import { Connection } from 'mysql'
-import { IConnectConfigOptions, IField, INumeralTypes, IRecords, IResultRecords } from './types'
+import { PoolConnection } from 'mysql'
+import { IConnectConfigOptions, IField, INumeralTypes, IRecords, IResultRecords, IValueChange } from './types'
 
 import * as mysql from 'mysql'
 import * as qs from 'querystringify'
@@ -7,8 +7,18 @@ import EventEmitter from './EventEmitter'
 import { sqlSplicing, checkFieldsType, isNullCheck, commonSplicing, sqlWhereSplicing, replaceValues } from './utils'
 const { isArray } = require('where-type')
 
+// 默认选项
+let defaultsOptions: IField<IValueChange<mysql.PoolConfig>> = {
+  connectionLimit: 100,
+  waitForConnections: true,
+  queueLimit: 0,
+  debug: true,
+  wait_timeout: 28800,
+  connect_timeout: 10
+}
+
 class MysqlParse extends EventEmitter {
-  public db: Connection | null = null
+  public db: PoolConnection | null = null
   constructor(host: string, user: string, password: string, database: string)
   constructor(host: IConnectConfigOptions, user?: string, password?: string, database?: string)
   // 主机名/ 用户/ 密码/ 数据库
@@ -20,6 +30,7 @@ class MysqlParse extends EventEmitter {
   ) {
     super()
     if (typeof this.host === 'object') {
+      defaultsOptions = this.host
       const { host, user, password, database } = this.host
       this.host = host
       this.user = user
@@ -34,7 +45,7 @@ class MysqlParse extends EventEmitter {
    */
   open() {
     const { host, user, password, database } = this
-    const pool = mysql.createPool({ host: host as string, user, password, database })
+    const pool = mysql.createPool({ ...defaultsOptions, host: host as string, user, password, database })
     pool.getConnection((err, connection) => {
       if (err) {
         this.emit('error', err)
@@ -51,14 +62,9 @@ class MysqlParse extends EventEmitter {
    */
   close() {
     if (this.db) {
-      this.db.end((err) => {
-        if (err) {
-          this.emit('error', err)
-        } else {
-          this.emit('close')
-          this.db = null
-        }
-      })
+      this.db.end()
+      this.emit('close')
+      this.db = null
     }
   }
 
@@ -89,6 +95,9 @@ class MysqlParse extends EventEmitter {
 
       // 进行数据查询
       this.db?.query(sql, (err, results: IResultRecords[]) => {
+        // 释放连接
+        this.db && this.db.release()
+
         if (err) {
           this.emit('error', err, sql)
           return reject(err)
@@ -152,6 +161,9 @@ class MysqlParse extends EventEmitter {
     const sql = `insert into ${tableName} (${Object.keys(fields).join(',')}) values (${values})`
     return new Promise((resolve, reject) => {
       this.db?.query(sql, Object.values(fields), (err) => {
+        // 释放连接
+        this.db && this.db.release()
+
         if (err) {
           this.emit('error', err)
           return reject({
@@ -196,6 +208,9 @@ class MysqlParse extends EventEmitter {
     )}`
     return new Promise((resolve, reject) => {
       this.db?.query(sql, modSqlParams, (err, results: number) => {
+        // 释放连接
+        this.db && this.db.release()
+
         if (err) {
           this.emit('error', err, sql)
           return reject({ sql, data: err })
@@ -240,6 +255,9 @@ class MysqlParse extends EventEmitter {
     const sql = `delete from ${tableName} ${sqlWhereSplicing(where)}`
     return new Promise((resolve, reject) => {
       this.db?.query(sql, (err, results: number) => {
+        // 释放连接
+        this.db && this.db.release()
+
         if (err) {
           this.emit('error', err, sql)
           return reject({ sql, data: err })

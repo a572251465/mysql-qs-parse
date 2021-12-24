@@ -8,6 +8,8 @@
 * Mysql-Qs-Parse 每次sql操作都会有对应的log打印
 * Mysql-Qs-Parse 它是安全的，每次查询都会经过非法字符的过滤，保证安全性
 
+> mysql数据库每次进行操作之前进行数据连接，操作结束后会自己释放连接池，使用的时候格外注意!!!
+
 ### install
 ```
 $ npm install mysql-qs-parse
