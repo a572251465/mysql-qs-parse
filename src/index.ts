@@ -70,6 +70,14 @@ class MysqlParse extends EventEmitter {
 
   /**
    * @author lihh
+   * @description 给用户提供自动释放连接
+   */
+  release() {
+    this.db && this.db.release()
+  }
+
+  /**
+   * @author lihh
    * @description 内部用来订阅log用
    * @param record 以及操作表记录
    */
@@ -95,9 +103,6 @@ class MysqlParse extends EventEmitter {
 
       // 进行数据查询
       this.db?.query(sql, (err, results: IResultRecords[]) => {
-        // 释放连接
-        this.db && this.db.release()
-
         if (err) {
           this.emit('error', err, sql)
           return reject(err)
@@ -161,9 +166,6 @@ class MysqlParse extends EventEmitter {
     const sql = `insert into ${tableName} (${Object.keys(fields).join(',')}) values (${values})`
     return new Promise((resolve, reject) => {
       this.db?.query(sql, Object.values(fields), (err) => {
-        // 释放连接
-        this.db && this.db.release()
-
         if (err) {
           this.emit('error', err)
           return reject({
@@ -208,9 +210,6 @@ class MysqlParse extends EventEmitter {
     )}`
     return new Promise((resolve, reject) => {
       this.db?.query(sql, modSqlParams, (err, results: number) => {
-        // 释放连接
-        this.db && this.db.release()
-
         if (err) {
           this.emit('error', err, sql)
           return reject({ sql, data: err })
@@ -255,9 +254,6 @@ class MysqlParse extends EventEmitter {
     const sql = `delete from ${tableName} ${sqlWhereSplicing(where)}`
     return new Promise((resolve, reject) => {
       this.db?.query(sql, (err, results: number) => {
-        // 释放连接
-        this.db && this.db.release()
-
         if (err) {
           this.emit('error', err, sql)
           return reject({ sql, data: err })

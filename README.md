@@ -8,7 +8,7 @@
 * Mysql-Qs-Parse 每次sql操作都会有对应的log打印
 * Mysql-Qs-Parse 它是安全的，每次查询都会经过非法字符的过滤，保证安全性
 
-> mysql数据库每次进行操作之前进行数据连接，操作结束后会自己释放连接池，使用的时候格外注意!!!
+> mysql数据库每次进行操作之前进行数据连接，为了能让每次请求后释放连接，提供了release方法，请注意!!!!
 
 ### install
 ```
@@ -95,6 +95,9 @@ const res = await db.find(['name', 'id'], 'User', {age: 20})
   * **`tableName`属性表示更新的表**
   * **`where`属性表示操作的条件，跟函数`findOne`含义一致**
   * **`fields`属性表示逻辑删除时更新的字段，逻辑删除必须的**
+* `release`
+  * 每次执行mysql操作的时候，都会创建连接，每次执行结束后释放连接，但是考虑到用户可能一个连接执行多次sql，所以释放连接的功能暴露出去
+  * 每次执行结束后执行`release`函数，记得下次请求前一定要重新执行`open`函数
 * **<font color=red>后续还有很多功能推出(例如：排序，分页，多表查询，复杂查询等)...</font>**
 ## 联系我
 ![个人logo](http://lihh-core.top/images/personal-logo.jpeg)
