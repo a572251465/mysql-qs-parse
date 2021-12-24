@@ -1,25 +1,11 @@
 import { Connection } from 'mysql'
-import { IConnectConfigOptions, IField, IRecords, IResultRecords } from './types'
+import { IConnectConfigOptions, IField, INumeralTypes, IRecords, IResultRecords } from './types'
 
 import * as mysql from 'mysql'
 import * as qs from 'querystringify'
 import EventEmitter from './EventEmitter'
+import { sqlSplicing, checkFieldsType, isNullCheck, commonSplicing, sqlWhereSplicing, replaceValues } from './utils'
 const { isArray } = require('where-type')
-
-/**
- * @author lihh
- * @description 进行sql查询字段的拼接
- * @param fields 表示需要查询的字段 允许别名
- */
-const sqlSplicing = (fields: IField[]): string => {
-  const arr = fields.map((item) => {
-    if (typeof item === 'string') return item
-
-    const values = Object.keys(item).map((cur) => `${cur} as ${item[cur]}`)
-    return values.join(',')
-  })
-  return arr.join(', ')
-}
 
 class MysqlParse extends EventEmitter {
   public db: Connection | null = null
@@ -48,8 +34,8 @@ class MysqlParse extends EventEmitter {
    */
   open() {
     const { host, user, password, database } = this
-    const connection = mysql.createConnection({ host: host as string, user, password, database })
-    connection.connect((err) => {
+    const pool = mysql.createPool({ host: host as string, user, password, database })
+    pool.getConnection((err, connection) => {
       if (err) {
         this.emit('error', err)
       } else {
@@ -150,7 +136,37 @@ class MysqlParse extends EventEmitter {
    * @param fields 表示插入的字段
    * @param tableName 表示表名
    */
-  insert(fields: IRecords, tableName: string) {}
+  insert(fields: IRecords, tableName: string) {
+    try {
+      isNullCheck(fields, `${tableName} update`, INumeralTypes.ONE)
+      isNullCheck(tableName, `${tableName} update`, INumeralTypes.TWO)
+
+      checkFieldsType(fields, ['object'], tableName)
+    } catch (e) {
+      this.emit('error', e)
+      throw e
+    }
+
+    // 执行sql
+    const values = Array.from({ length: Object.keys(fields).length }, () => '?').join(',')
+    const sql = `insert into ${tableName} (${Object.keys(fields).join(',')}) values (${values})`
+    return new Promise((resolve, reject) => {
+      this.db?.query(sql, Object.values(fields), (err) => {
+        if (err) {
+          this.emit('error', err)
+          return reject({
+            sql,
+            data: err
+          })
+        }
+
+        resolve({
+          sql,
+          data: 1
+        })
+      })
+    })
+  }
 
   /**
    * @author lihh
@@ -159,7 +175,39 @@ class MysqlParse extends EventEmitter {
    * @param tableName 表示更新的表
    * @param where 表示更新的条件
    */
-  update(fields: IRecords, tableName: string, where: IRecords) {}
+  update(fields: IRecords, tableName: string, where: IRecords) {
+    try {
+      // 确定值check
+      isNullCheck(fields, `${tableName} update`, INumeralTypes.ONE)
+      isNullCheck(tableName, `${tableName} update`, INumeralTypes.TWO)
+
+      checkFieldsType(fields, ['object'], tableName)
+      checkFieldsType(where, ['object'], tableName)
+    } catch (e) {
+      this.emit('error', e)
+      throw e
+    }
+
+    // 更新参数
+    const modSqlParams = Object.values(fields).concat(Object.values(where))
+    // 执行sql文
+    const sql = `update ${tableName} set ${commonSplicing(replaceValues(fields, '?'))} ${sqlWhereSplicing(
+      replaceValues(where, '?')
+    )}`
+    return new Promise((resolve, reject) => {
+      this.db?.query(sql, modSqlParams, (err, results: number) => {
+        if (err) {
+          this.emit('error', err, sql)
+          return reject({ sql, data: err })
+        }
+
+        resolve({
+          sql,
+          data: results
+        })
+      })
+    })
+  }
 
   /**
    * @author lihh
@@ -168,7 +216,42 @@ class MysqlParse extends EventEmitter {
    * @param where 删除的条件
    * @param fields 逻辑删除更新的字段
    */
-  delete(tableName: string, where: IRecords, fields?: IRecords) {}
+  delete(tableName: string, where: IRecords, fields?: IRecords) {
+    try {
+      // 确定值check
+      isNullCheck(tableName, `${tableName} update`, INumeralTypes.ONE)
+      isNullCheck(where, `${tableName} update`, INumeralTypes.TWO)
+
+      checkFieldsType(where, ['object'], tableName)
+      if (fields) {
+        checkFieldsType(fields, ['object'], tableName)
+      }
+    } catch (e) {
+      this.emit('error', e)
+      throw e
+    }
+
+    // 判断是否是逻辑删除
+    if (!fields) {
+      return this.update(fields!, tableName, where)
+    }
+
+    // 进行表的删除
+    const sql = `delete from ${tableName} ${sqlWhereSplicing(where)}`
+    return new Promise((resolve, reject) => {
+      this.db?.query(sql, (err, results: number) => {
+        if (err) {
+          this.emit('error', err, sql)
+          return reject({ sql, data: err })
+        }
+
+        resolve({
+          sql,
+          data: results
+        })
+      })
+    })
+  }
 }
 
 export default MysqlParse
