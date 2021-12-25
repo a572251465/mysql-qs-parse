@@ -1,4 +1,3 @@
-import { PoolConnection } from 'mysql'
 import { IConnectConfigOptions, IField, INumeralTypes, IRecords, IResultRecords, IValueChange } from './types'
 
 import * as mysql from 'mysql'
@@ -7,8 +6,8 @@ import { sqlSplicing, checkFieldsType, isNullCheck, commonSplicing, sqlWhereSpli
 const { isArray } = require('where-type')
 
 // 默认选项
-let defaultsOptions: IField<IValueChange<mysql.PoolConfig>> = {
-  connectionLimit: 100,
+let defaultsOptions: IField<IValueChange<mysql.ConnectionConfig>> = {
+  connectionLimit: 1000,
   waitForConnections: true,
   queueLimit: 0,
   debug: true,
@@ -17,7 +16,7 @@ let defaultsOptions: IField<IValueChange<mysql.PoolConfig>> = {
 }
 
 class MysqlParse extends EventEmitter {
-  public db: PoolConnection | null = null
+  public db: mysql.Connection | null = null
   constructor(host: string, user: string, password: string, database: string)
   constructor(host: IConnectConfigOptions, user?: string, password?: string, database?: string)
   // 主机名/ 用户/ 密码/ 数据库
@@ -45,15 +44,15 @@ class MysqlParse extends EventEmitter {
   open() {
     return new Promise((resolve, reject) => {
       const { host, user, password, database } = this
-      const pool = mysql.createPool({ ...defaultsOptions, host: host as string, user, password, database })
-      pool.getConnection((err, connection) => {
+      const connection = mysql.createConnection({ ...defaultsOptions, host: host as string, user, password, database })
+      connection.connect((err) => {
         if (err) {
           this.emit('error', err)
           reject(err)
         } else {
           this.db = connection
           this.emit('open')
-          resolve(null)
+          resolve(connection)
         }
       })
     })
@@ -61,22 +60,20 @@ class MysqlParse extends EventEmitter {
 
   /**
    * @author lihh
-   * @description 进行数据库连接关闭
-   */
-  close() {
-    if (this.db) {
-      this.db.end()
-      this.emit('close')
-      this.db = null
-    }
-  }
-
-  /**
-   * @author lihh
    * @description 给用户提供自动释放连接
    */
   release() {
-    this.db && this.db.release()
+    if (this.db) {
+      this.db.end((err) => {
+        if (err) {
+          this.emit('error', err)
+          return
+        }
+
+        this.emit('close')
+        this.db = null
+      })
+    }
   }
 
   /**

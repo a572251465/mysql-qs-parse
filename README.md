@@ -121,29 +121,39 @@ db.release()
 * 还是不太明白该怎么用？？？ 怎么能高效使用插件
   * answer: 下面来给大家讲解一个我自己用的mysql-connect中间件
     ```js
+    const MysqlParse = require('mysql-qs-parse')
+    const { logInfo } = require('./helper')
+    const resultInfo = require('./resultInfo')
+    const { CONNECT_FAIL } = require('./constants')
+
     // 初始化mysql配置
-    const connect = new MysqlParse({
+    const db = new MysqlParse({
       host: 'localhost',
       user: 'root',
       password: 'root',
       database: 'super-admin-system'
     })
 
-    function mysqlConnect() {
-      return async (ctx, next) => {
-        // 订阅错误信息 一次订阅执行结束后销毁 如果不是关联ctx 可以单独独立出去
-        connect.once('error', (log) => {
-          logInfo.fail(log)
-          ctx.body = resultInfo.result('', CONNECT_FAIL.code, CONNECT_FAIL.msg)
-        })
+    /**
+    * @author lihh
+    * @description 进行数据库的连接
+    * @returns 每次动态释放
+    */
+    const connect = async () => {
+      db.once('error', (...log) => {
+        logInfo.fail(log)
+        throw Error(resultInfo.result('', CONNECT_FAIL.code, CONNECT_FAIL.msg))
+      })
 
-        // open 也是promise 支持同步写法（也可以使用connect.on('open', fn) 来实现，不过还是建议这种）
-        await connect.open()
-        ctx.db = connect
-        logInfo.info('数据库连接成功')
-        await next()
+      await db.open()
+      logInfo.info('数据库连接成功')
+      return {
+        release: db.release,
+        db
       }
     }
+
+    module.exports = connect
     ```
 
 ## 联系我

@@ -31,29 +31,4 @@
     console.log(res)
     db.release()
   })
-
-  setTimeout(() => {
-    makePromise().then(async (db) => {
-      const res = await db.update({ visitNum: 200 }, 'cuVisitNum', {
-        id: `97cf679b-16df-4abc-ba81-d8076333ef3e`
-      })
-      console.log(res)
-      db.release()
-    })
-  }, 1000)
-
-  setTimeout(() => {
-    makePromise().then(async (db) => {
-      const res = await db.insert({ 
-        id: + new Date(),
-        type: 'work-platform',
-        visitNum: 200,
-        active: 1
-       }, 'cuVisitNum', {
-        id: `97cf679b-16df-4abc-ba81-d8076333ef3e`
-      })
-      console.log(res)
-      db.release()
-    })
-  }, 2000);
 })()
