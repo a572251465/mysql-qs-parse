@@ -44,15 +44,19 @@ class MysqlParse extends EventEmitter {
    * @description 打开mysql连接
    */
   open() {
-    const { host, user, password, database } = this
-    const pool = mysql.createPool({ ...defaultsOptions, host: host as string, user, password, database })
-    pool.getConnection((err, connection) => {
-      if (err) {
-        this.emit('error', err)
-      } else {
-        this.db = connection
-        this.emit('open')
-      }
+    return new Promise((resolve, reject) => {
+      const { host, user, password, database } = this
+      const pool = mysql.createPool({ ...defaultsOptions, host: host as string, user, password, database })
+      pool.getConnection((err, connection) => {
+        if (err) {
+          this.emit('error', err)
+          reject(err)
+        } else {
+          this.db = connection
+          this.emit('open')
+          resolve(null)
+        }
+      })
     })
   }
 

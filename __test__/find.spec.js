@@ -6,19 +6,18 @@
     password: 'location@root',
     database: 'super-admin-system'
   })
+  connection.on('error', (log) => {
+    console.log(log)
+  })
+
+  connection.on('mysql-log', (log) => {
+    console.log(log)
+  })
 
   const makePromise = () => {
     return new Promise((resolve) => {
-      connection.on('open', async () => {
+      connection.once('open', async () => {
         resolve(connection)
-      })
-
-      connection.on('error', (log) => {
-        console.log(log)
-      })
-
-      connection.on('mysql-log', (log) => {
-        console.log(log)
       })
 
       connection.open()
@@ -26,7 +25,7 @@
   }
 
   makePromise().then(async (db) => {
-    const res = await db.findOne(['id', 'name'], 'cuIndexMenu')
+    const res = await db.find(['id', 'name'], 'cuIndexMenu')
     console.log(res)
   })
   setTimeout(() => {

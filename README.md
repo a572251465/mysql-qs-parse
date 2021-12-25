@@ -20,7 +20,7 @@ $ $yarn add mysql-qs-parse
 ```js
 const MysqlParse = require('mysql-qs-parse')
 const db = new MysqlParse('localhost', 'user', 'password', 'bookSystem')
-db.on('open', () => {
+db.once('open', () => {
   // 打开成功的订阅
 })
 
@@ -33,8 +33,14 @@ db.on('mysql-log', (sql) => {
 })
 // ... 还可以订阅close函数
 
+// 进行数据库连接
+await db.open()
+
 // 查询 User表的name，id字段 条件是age = 20
 const res = await db.find(['name', 'id'], 'User', {age: 20})
+
+// 查询结束后 释放连接
+db.release()
 ```
 #### 实例2
 ```js
@@ -45,7 +51,7 @@ const db = new MysqlParse({
   password: '123456',
   database: 'test'
 })
-db.on('open', () => {
+db.once('open', () => {
   // 打开成功的订阅
 })
 
@@ -58,17 +64,22 @@ db.on('mysql-log', (sql) => {
 })
 // ... 还可以订阅close函数
 
+// 进行数据库连接
+await db.open()
+
 // 查询 User表的name，id字段 条件是age = 20
 const res = await db.find(['name', 'id'], 'User', {age: 20})
+// 查询结束后 释放连接
+db.release()
 ```
 ### options
 #### 基于发布订阅的方法
-* `db.on('open', fn)`：当数据库连接成功的时候，进行订阅方法的回调，将会调用这个订阅函数
+* `db.once('open', fn)`：当数据库连接成功的时候，进行订阅方法的回调，将会调用这个订阅函数, 下次重新连接，重新订阅
 * `db.on('close', fn)`：同理，这个是连接关闭的订阅函数
 * `db.on('error', fn)`：同理，所有的错误都是通过订阅error的函数来实现
 * `db.on('mysql-log', fn)`：如果您的业务场景下需要每次执行都要看到sql执行，这里会打印出拼装的sql
 #### 数据库相关的函数
-* `db.open()`：进行数据库的连接，连接的回调可以在`db.on('open')`中来查询
+* `db.open()`：进行数据库的连接，连接的回调可以在`db.on('open')`/ `或是await db.open()`(建议使用后者)中来查询
 * `db.close()`：进行数据库的连接关闭，关闭成功回调可以在`db.on('close')`中来查询
 #### 执行sql的函数
 * `findOne(fields, tableName, where)`
@@ -99,6 +110,39 @@ const res = await db.find(['name', 'id'], 'User', {age: 20})
   * 每次执行mysql操作的时候，都会创建连接，每次执行结束后释放连接，但是考虑到用户可能一个连接执行多次sql，所以释放连接的功能暴露出去
   * 每次执行结束后执行`release`函数，记得下次请求前一定要重新执行`open`函数
 * **<font color=red>后续还有很多功能推出(例如：排序，分页，多表查询，复杂查询等)...</font>**
+## QA
+* 使用插件后，在查询的时候出现错误（mysql PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR）
+  * answer: [参照mysql issues](https://github.com/mysqljs/mysql/issues/1166)
+* 为什么会多测触发订阅的open方法呢？？？
+  * answer: 回调时基于发布订阅的，不能连续订阅多次，如果想订阅也可以用once 来替代on
+* 还是不太明白该怎么用？？？ 怎么能高效使用插件
+  * answer: 下面来给大家讲解一个我自己用的mysql-connect中间件
+    ```js
+    // 初始化mysql配置
+    const connect = new MysqlParse({
+      host: 'localhost',
+      user: 'root',
+      password: 'root',
+      database: 'super-admin-system'
+    })
+
+    function mysqlConnect() {
+      return async (ctx, next) => {
+        // 订阅错误信息 一次订阅执行结束后销毁 如果不是关联ctx 可以单独独立出去
+        connect.once('error', (log) => {
+          logInfo.fail(log)
+          ctx.body = resultInfo.result('', CONNECT_FAIL.code, CONNECT_FAIL.msg)
+        })
+
+        // open 也是promise 支持同步写法（也可以使用connect.on('open', fn) 来实现，不过还是建议这种）
+        await connect.open()
+        ctx.db = connect
+        logInfo.info('数据库连接成功')
+        await next()
+      }
+    }
+    ```
+
 ## 联系我
 ![个人logo](http://lihh-core.top/images/personal-logo.jpeg)
  * [GitHub](https://github.com/a572251465)
