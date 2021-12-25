@@ -1,5 +1,5 @@
 import { ICheckOptions, IField } from './types'
-const { isArray, getTypes, isNumber } = require('where-type')
+const { isArray, getTypes, isNumber, isString } = require('where-type')
 
 /**
  * @author lihh
@@ -22,6 +22,7 @@ const sqlSplicing = (fields: IField[]): string => {
  * @param value 表示传递的值
  */
 const paramsTypes = (value: string | IField) => {
+  if (value === '?') return value
   return isNumber(value) ? +value : `'${value}'`
 }
 
