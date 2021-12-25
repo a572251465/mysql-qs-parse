@@ -1,9 +1,9 @@
 ;(() => {
   const MysqlParse = require('../dist/index')
   const connection = new MysqlParse({
-    host: 'localhost',
+    host: '121.196.212.200',
     user: 'root',
-    password: 'location@root',
+    password: '@mysql572251465',
     database: 'super-admin-system'
   })
   connection.on('error', (log) => {
@@ -25,13 +25,9 @@
   }
 
   makePromise().then(async (db) => {
-    const res = await db.find(['id', 'name'], 'cuIndexMenu')
+    const res = await db.find(['value'], 'cuEnumTypes', {
+      type: 'visit'
+    })
     console.log(res)
   })
-  setTimeout(() => {
-    makePromise().then(async (db) => {
-      const res = await db.findOne(['id', 'name'], 'cuIndexMenu')
-      console.log(res)
-    })
-  }, 1000)
 })()

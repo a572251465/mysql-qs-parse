@@ -1,5 +1,5 @@
 import { ICheckOptions, IField } from './types'
-const { isArray, getTypes } = require('where-type')
+const { isArray, getTypes, isNumber } = require('where-type')
 
 /**
  * @author lihh
@@ -18,6 +18,15 @@ const sqlSplicing = (fields: IField[]): string => {
 
 /**
  * @author lihh
+ * @description 进行参数类型判断
+ * @param value 表示传递的值
+ */
+const paramsTypes = (value: string | IField) => {
+  return isNumber(value) ? +value : `'${value}'`
+}
+
+/**
+ * @author lihh
  * @description 表示共同的拼接 一般都是key = value
  * @param fields 拼接的字段
  */
@@ -25,7 +34,7 @@ const commonSplicing = (fields: IField): string | string[] => {
   // 首先判断是否为空
   if (!fields || Object.keys(fields).length === 0) return ''
 
-  const values = Object.keys(fields).map((cur) => `${cur} = ${fields[cur]}`)
+  const values = Object.keys(fields).map((cur) => `${cur} = ${paramsTypes(fields[cur])}`)
   return values
 }
 
@@ -39,7 +48,7 @@ const sqlWhereSplicing = (fields: IField): string => {
   if (values === '') return ''
 
   const sql = (values as string[]).join(' and ')
-  return `where ${sql}`
+  return ` where ${sql}`
 }
 
 /**

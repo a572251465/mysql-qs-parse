@@ -2,7 +2,6 @@ import { PoolConnection } from 'mysql'
 import { IConnectConfigOptions, IField, INumeralTypes, IRecords, IResultRecords, IValueChange } from './types'
 
 import * as mysql from 'mysql'
-import * as qs from 'querystringify'
 import EventEmitter from './EventEmitter'
 import { sqlSplicing, checkFieldsType, isNullCheck, commonSplicing, sqlWhereSplicing, replaceValues } from './utils'
 const { isArray } = require('where-type')
@@ -102,7 +101,7 @@ class MysqlParse extends EventEmitter {
     return new Promise((resolve, reject) => {
       let sql = `select ${sqlSplicing(fields)} from ${tableName}`
       if (where && typeof where === 'object' && Object.keys(where).length > 0) {
-        sql += ` where ${qs.stringify(where)}`
+        sql += sqlWhereSplicing(where)
       }
 
       // 进行数据查询
@@ -132,7 +131,7 @@ class MysqlParse extends EventEmitter {
     const { sql, data } = await this.comQuery(fields, tableName, where)
     this.logRecords(sql)
 
-    return data.length > 0 ? data[0] : data
+    return data.length > 0 ? data[0] : null
   }
 
   /**
@@ -172,16 +171,10 @@ class MysqlParse extends EventEmitter {
       this.db?.query(sql, Object.values(fields), (err) => {
         if (err) {
           this.emit('error', err)
-          return reject({
-            sql,
-            data: err
-          })
+          return reject(0)
         }
 
-        resolve({
-          sql,
-          data: 1
-        })
+        resolve(1)
       })
     })
   }
@@ -216,13 +209,10 @@ class MysqlParse extends EventEmitter {
       this.db?.query(sql, modSqlParams, (err, results: number) => {
         if (err) {
           this.emit('error', err, sql)
-          return reject({ sql, data: err })
+          return reject(0)
         }
 
-        resolve({
-          sql,
-          data: results
-        })
+        resolve(1)
       })
     })
   }
@@ -260,13 +250,10 @@ class MysqlParse extends EventEmitter {
       this.db?.query(sql, (err, results: number) => {
         if (err) {
           this.emit('error', err, sql)
-          return reject({ sql, data: err })
+          return reject(0)
         }
 
-        resolve({
-          sql,
-          data: results
-        })
+        resolve(1)
       })
     })
   }

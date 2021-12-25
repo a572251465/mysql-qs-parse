@@ -1,6 +1,6 @@
 {
   "name": "mysql-qs-parse",
-  "version": "2.2.0",
+  "version": "2.2.4",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
@@ -40,7 +40,6 @@
   },
   "dependencies": {
     "mysql": "^2.18.1",
-    "querystringify": "^2.2.0",
     "where-type": "^1.1.1"
   }
 }
