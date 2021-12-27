@@ -14,6 +14,10 @@
     console.log(log)
   })
 
+  connection.on('close', () => {
+    console.log('连接已关闭')
+  })
+
   const makePromise = () => {
     return new Promise((resolve) => {
       connection.once('open', async () => {
