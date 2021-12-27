@@ -7,8 +7,7 @@ interface IOptions {
 
 class EventEmitter {
   private pool: IOptions = {}
-  constructor() {
-  }
+  constructor() {}
 
   /**
    * @author lihh
@@ -17,7 +16,7 @@ class EventEmitter {
    * @param fn 订阅方法
    */
   on(keyName: string, fn: IFn) {
-    const arr = (this.pool[keyName] || (this.pool[keyName] = []))
+    const arr = this.pool[keyName] || (this.pool[keyName] = [])
     if (arr.includes(fn)) return
 
     arr.push(fn)
@@ -30,7 +29,7 @@ class EventEmitter {
    * @param fn 执行函数
    */
   once(keyName: string, fn: IFn) {
-    const newFn: (IFn & {l: IFn}) = (...args: any[]) => {
+    const newFn: IFn & { l: IFn } = (...args: any[]) => {
       fn(...args)
       this.off(keyName, fn)
     }
@@ -38,18 +37,17 @@ class EventEmitter {
     this.on(keyName, newFn)
   }
 
-
   /**
    * @author lihh
    * @description 取消订阅
    * @param keyName 订阅名称
    * @param fn 函数
    */
-  off(keyName: string, fn: IFn & {l?: IFn}) {
-    const arr = (this.pool[keyName] || (this.pool[keyName] = []))
+  off(keyName: string, fn: IFn & { l?: IFn }) {
+    const arr = this.pool[keyName] || (this.pool[keyName] = [])
     if (arr.length === 0) return
 
-    this.pool[keyName] = arr.filter(method => method !== fn && method !== fn.l )
+    this.pool[keyName] = arr.filter((method) => method !== fn && method !== fn.l)
   }
 
   /**
@@ -60,7 +58,7 @@ class EventEmitter {
    */
   emit(keyName: string, ...args: any[]) {
     const arr = this.pool[keyName] || []
-    arr.forEach(fn => fn(...args))
+    arr.forEach((fn) => fn(...args))
   }
 }
 
