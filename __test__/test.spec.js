@@ -1,5 +1,7 @@
-const sum = require('../test-demo/sum')
+import sum from '../src/test'
 
-test('adds 1 + 2 toB 3', () => {
-  expect(sum(1, 2)).toBe(3)
+describe('测试ts案例', () => {
+  test('测试sum：', () => {
+    expect(sum(1, 2)).toBe(3)
+  })
 })

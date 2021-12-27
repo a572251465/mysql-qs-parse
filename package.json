@@ -30,6 +30,9 @@
   },
   "homepage": "https://github.com/a572251465/mysql-qs-parse",
   "devDependencies": {
+    "@babel/core": "^7.16.5",
+    "@babel/preset-env": "^7.16.5",
+    "@babel/preset-typescript": "^7.16.5",
     "@rollup/plugin-typescript": "^8.3.0",
     "@types/mysql": "^2.15.19",
     "@types/querystringify": "^2.0.0",
@@ -37,10 +40,33 @@
     "prettier": "^2.5.1",
     "rollup": "^2.61.1",
     "rollup-plugin-terser": "^7.0.2",
+    "ts-jest": "^27.1.2",
     "typescript": "^4.5.4"
   },
   "dependencies": {
     "mysql": "^2.18.1",
     "where-type": "^1.1.1"
+  },
+  "jest": {
+    "preset": "ts-jest",
+    "testURL": "http://localhost/",
+    "timers": "1000",
+    "moduleNameMapper": {
+      "\\.(jpg|jpeg|png|gif|eot|otf|webp|svg|ttf|woff|woff2|mp4|webm|wav|mp3|m4a|aac|oga)$": "<rootDir>/internals/mocks/fileMock.js",
+      "\\.(css|less|sass|scss)$": "identity-obj-proxy"
+    },
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "json",
+      "ts",
+      "tsx"
+    ],
+    "transform": {
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "./node_modules/(?!(lodash-es))"
+    ]
   }
 }
