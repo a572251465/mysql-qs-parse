@@ -120,7 +120,7 @@ db.release()
 * `release`
   * 每次执行mysql操作的时候，都会创建连接，每次执行结束后释放连接，但是考虑到用户可能一个连接执行多次sql，所以释放连接的功能暴露出去
   * 每次执行结束后执行`release`函数，记得下次请求前一定要重新执行`open`函数
-* **<font color=red>后续还有很多功能推出(例如：排序，分页，多表查询，复杂查询等)...</font>**
+* **<font color=red>后续还有很多功能推出(例如：多表查询，复杂查询等)...</font>**
 ## QA
 * 使用插件后，在查询的时候出现错误（mysql PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR）
   * answer: [参照mysql issues](https://github.com/mysqljs/mysql/issues/1166)
