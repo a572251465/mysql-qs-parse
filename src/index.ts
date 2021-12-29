@@ -2,6 +2,8 @@ import {
   IConnectConfigOptions,
   IField,
   IFieldOptions,
+  IFindOptions,
+  ILimitOptions,
   INumeralTypes,
   IRecords,
   IResultRecords,
@@ -10,8 +12,16 @@ import {
 
 import * as mysql from 'mysql'
 import EventEmitter from './EventEmitter'
-import { sqlSplicing, checkFieldsType, isNullCheck, commonSplicing, sqlWhereSplicing, replaceValues } from './utils'
-const { isArray } = require('where-type')
+import {
+  sqlSplicing,
+  checkFieldsType,
+  isNullCheck,
+  commonSplicing,
+  sqlWhereSplicing,
+  replaceValues,
+  orderSplicing
+} from './utils'
+const { isArray, isObject } = require('where-type')
 
 // 默认选项
 let defaultsOptions: IField<IValueChange<mysql.ConnectionConfig>> = {
@@ -101,16 +111,31 @@ class MysqlParse extends EventEmitter {
    * @param fields 查询的字段
    * @param tableName 需要的表名
    * @param where 以及查询的条件
+   * @param order 表示排序的字段
+   * @param limit 表示分页的字段
    */
   private comQuery(
     fields: IFieldOptions[],
     tableName: string,
-    where: IRecords
+    where?: IRecords,
+    order?: IField,
+    limit?: ILimitOptions
   ): Promise<{ sql: string; data: IRecords[] }> {
     return new Promise((resolve, reject) => {
       let sql = `select ${sqlSplicing(fields)} from ${tableName}`
       if (where && typeof where === 'object' && Object.keys(where).length > 0) {
         sql += sqlWhereSplicing(where)
+      }
+
+      if (order && typeof order === 'object') {
+        sql += orderSplicing(order)
+      }
+
+      if (limit && typeof limit === 'object' && Object.keys(limit).length > 0) {
+        let { page = undefined, limit: nums = undefined } = limit
+        if (page === undefined) page = 1
+        if (nums === undefined) nums = 100000
+        sql += ` limit ${page},${nums}`
       }
 
       // 进行数据查询
@@ -137,10 +162,24 @@ class MysqlParse extends EventEmitter {
    * @param where 以及查询的条件
    */
   async findOne(fields: IFieldOptions[], tableName: string, where: IRecords): Promise<any> {
-    const { sql, data } = await this.comQuery(fields, tableName, where)
-    this.logRecords(sql)
+    try {
+      // 判断字段是否为空
+      isNullCheck(tableName, `表名 findOne`, INumeralTypes.TWO)
+      isNullCheck(fields, `${tableName} findOne`, INumeralTypes.ONE)
+      isNullCheck(where, `${tableName} findOne`, INumeralTypes.THREE)
 
-    return data.length > 0 ? data[0] : null
+      // 判断字段是否有效
+      checkFieldsType(fields, ['string', 'object'], tableName)
+      checkFieldsType(where, ['object'], tableName)
+
+      const { sql, data } = await this.comQuery(fields, tableName, where)
+      this.logRecords(sql)
+
+      return data.length > 0 ? data[0] : null
+    } catch (e) {
+      this.emit('error', e)
+      throw e
+    }
   }
 
   /**
@@ -150,10 +189,57 @@ class MysqlParse extends EventEmitter {
    * @param tableName 需要的表名
    * @param where 以及查询的条件
    */
-  async find(fields: IFieldOptions[], tableName: string, where: IRecords): Promise<any> {
-    const { sql, data } = await this.comQuery(fields, tableName, where)
-    this.logRecords(sql)
-    return data
+  find(fields: IFieldOptions[], tableName: string, where?: IRecords): Promise<any>
+  find(fields: IFindOptions): Promise<any>
+  async find(
+    paramOptions: IFindOptions | IFieldOptions[],
+    tableNameParam?: string,
+    whereParam?: IRecords
+  ): Promise<any> {
+    try {
+      let fields: IFindOptions | IFieldOptions[] | null = null,
+        tableName: string | undefined = undefined,
+        where: IRecords | undefined = undefined,
+        order: IField = {},
+        limit: ILimitOptions = { page: 1, limit: 100000 }
+
+      // 判断参数是依次传递 还是按对象传递
+      if (isObject(paramOptions)) {
+        const {
+          fields: param1,
+          tableName: param2,
+          where: param3,
+          order: param4,
+          limit: param5
+        } = paramOptions as IFindOptions
+        fields = param1
+        tableName = param2
+        where = param3
+        order = param4 as IField
+        limit = param5 as ILimitOptions
+      } else {
+        fields = paramOptions
+        tableName = tableNameParam
+        where = whereParam
+      }
+
+      // 判断参数是否有值
+      isNullCheck(tableName, `为空表名 find`, INumeralTypes.TWO)
+      isNullCheck(fields, `${tableName} find`, INumeralTypes.ONE)
+
+      // 判断传递的参数是否有效
+      checkFieldsType(fields, ['string', 'object'], tableName as string)
+      where && checkFieldsType(where, ['object'], tableName as string)
+      order && checkFieldsType(order, ['object'], tableName as string)
+      limit && checkFieldsType(limit, ['object'], tableName as string)
+
+      const { sql, data } = await this.comQuery(fields as IFieldOptions[], tableName as string, where, order, limit)
+      this.logRecords(sql)
+      return data
+    } catch (e) {
+      this.emit('error', e)
+      throw e
+    }
   }
 
   /**

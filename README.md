@@ -7,6 +7,7 @@
 * Mysql-Qs-Parse 为了方便各种业务查询，增加了很多方法find, findOne等
 * Mysql-Qs-Parse 每次sql操作都会有对应的log打印
 * Mysql-Qs-Parse 它是安全的，每次查询都会经过非法字符的过滤，保证安全性
+* Mysql-Qs-Parse 争取做到零失误，经过严密的jest测试
 
 > mysql数据库每次进行操作之前进行数据连接，为了能让每次请求后释放连接，提供了release方法，请注意!!!!
 
@@ -92,6 +93,13 @@ db.release()
 * `find(fields, tableName, where)`
   * _**具体的参数字段含义，可以参照`findOne`函数**_
   * 这个函数会返回多条数据，实际数据库中返回几条会依次都返回
+  * **<span style = 'border-bottom: 1px solid red;'>如果想使用拆线的排序以及limit功能，请看下面的分解：</span>**
+    * <span style = 'border-bottom: 1px solid red;'>除了上述find函数中传递的参数以外，还可以传递一个对象，对象的参数下解：</span>
+      * **`fields`：表示查询的字段，字段的格式跟函数`findOne`保持一致. <span style = 'color: red;'>必须项</span>**
+      * **`tableName`：表示查询的表，<span style = 'color: red;'>必须项</span>**
+      * **`where`：表示检索的条件，跟上述的where格式保持一致**
+      * **`order`: 表示排序的字段，这个值是一个对象，如果是升序值为top，反之bottom。例如：`{a: top, b: bottom} => ORDER BY a asc, b desc`.如果不是左侧两个值，在sql查询的时候直接被过滤掉**
+      * **`limit`：表示分页的关键字，这个值同样是一个对象，分别有`page`,`limit`. 分别是页数，条数。例如：`{page: 1, limit: 5} => limit 1, 5`**
 * `insert(fields, tableName)`
   * 对表进行插入操作
   * **`fields`属性表示插入的对象，里面所有的元素都是对象，key表示插入的表属性，value表示插入的表值**

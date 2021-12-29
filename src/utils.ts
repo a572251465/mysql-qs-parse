@@ -1,5 +1,5 @@
-import { ICheckOptions, IField, IFieldOptions } from './types'
-const { isArray, getTypes, isNumber } = require('where-type')
+import { ICheckOptions, IField, IFieldOptions, ILimitOptions } from './types'
+const { isArray, getTypes, isNumber, isObject } = require('where-type')
 
 /**
  * @author lihh
@@ -40,6 +40,28 @@ const commonSplicing = (fields: IField): string | string[] => {
 
 /**
  * @author lihh
+ * @description 对排序的字段进行字符串拼接操作
+ * @param order 排序的对象
+ */
+const orderSplicing = (order: IField): string => {
+  if (!isObject(order)) return ''
+
+  // 进行正确内容筛选 排序的值只能是bottom，top
+  const transformValues: IField = {
+    bottom: 'desc',
+    top: 'asc'
+  }
+  const afterOrder = Object.keys(order).reduce((pre, cur) => {
+    const item = order[cur] as string
+    if (!['bottom', 'top'].includes(item)) return pre
+    pre.push(`${cur} ${transformValues[item]}`)
+    return pre
+  }, [] as string[])
+  return afterOrder.length === 0 ? '' : ` ORDER BY ${afterOrder.join(', ')}`
+}
+
+/**
+ * @author lihh
  * @description 进行sql where 条件的拼接
  * @param fields where的条件的拼接
  */
@@ -58,7 +80,11 @@ const sqlWhereSplicing = (fields: IField): string => {
  * @param expectTypes 以及期望出现的类型
  * @param tableName 查询表名称
  */
-const checkFieldsType = (content: IField | ICheckOptions[], expectTypes: string[], tableName: string) => {
+const checkFieldsType = (
+  content: IField | ICheckOptions[] | ILimitOptions,
+  expectTypes: string[],
+  tableName: string
+) => {
   // 进行数据格式化 统一使用数组来处理
   if (!isArray(content)) {
     if (Object.keys(content).length === 0) return
@@ -90,6 +116,7 @@ const checkFieldsType = (content: IField | ICheckOptions[], expectTypes: string[
  * @description 进行类型判断 判断是否为空
  * @param content 判断的内容
  * @param message 判断出错后的消息
+ * @param num 表示参数的位置
  */
 function isNullCheck(content: null | undefined | string | IField | any[], message: string, num: string) {
   // 判断类型是否为null | undefined
@@ -114,4 +141,4 @@ function replaceValues(fields: IField, sign: string) {
   }, {} as IField)
 }
 
-export { sqlSplicing, checkFieldsType, isNullCheck, sqlWhereSplicing, commonSplicing, replaceValues }
+export { sqlSplicing, checkFieldsType, isNullCheck, orderSplicing, sqlWhereSplicing, commonSplicing, replaceValues }

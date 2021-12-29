@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`测试查询函数find方法 find 无条件查询多条数据 1`] = `
+Object {
+  "introduce": Any<String>,
+  "name": Any<String>,
+}
+`;
