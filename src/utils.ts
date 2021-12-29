@@ -1,12 +1,12 @@
-import { ICheckOptions, IField } from './types'
-const { isArray, getTypes, isNumber, isString } = require('where-type')
+import { ICheckOptions, IField, IFieldOptions } from './types'
+const { isArray, getTypes, isNumber } = require('where-type')
 
 /**
  * @author lihh
  * @description 进行sql查询字段的拼接
  * @param fields 表示需要查询的字段 允许别名
  */
-const sqlSplicing = (fields: IField[]): string => {
+const sqlSplicing = (fields: IFieldOptions[]): string => {
   const arr = fields.map((item) => {
     if (typeof item === 'string') return item
 
@@ -35,8 +35,7 @@ const commonSplicing = (fields: IField): string | string[] => {
   // 首先判断是否为空
   if (!fields || Object.keys(fields).length === 0) return ''
 
-  const values = Object.keys(fields).map((cur) => `${cur} = ${paramsTypes(fields[cur])}`)
-  return values
+  return Object.keys(fields).map((cur) => `${cur} = ${paramsTypes(fields[cur])}`)
 }
 
 /**

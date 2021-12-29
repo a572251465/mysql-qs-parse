@@ -1,4 +1,12 @@
-import { IConnectConfigOptions, IField, INumeralTypes, IRecords, IResultRecords, IValueChange } from './types'
+import {
+  IConnectConfigOptions,
+  IField,
+  IFieldOptions,
+  INumeralTypes,
+  IRecords,
+  IResultRecords,
+  IValueChange
+} from './types'
 
 import * as mysql from 'mysql'
 import EventEmitter from './EventEmitter'
@@ -94,7 +102,11 @@ class MysqlParse extends EventEmitter {
    * @param tableName 需要的表名
    * @param where 以及查询的条件
    */
-  private comQuery(fields: IField[], tableName: string, where: IRecords): Promise<{ sql: string; data: IRecords[] }> {
+  private comQuery(
+    fields: IFieldOptions[],
+    tableName: string,
+    where: IRecords
+  ): Promise<{ sql: string; data: IRecords[] }> {
     return new Promise((resolve, reject) => {
       let sql = `select ${sqlSplicing(fields)} from ${tableName}`
       if (where && typeof where === 'object' && Object.keys(where).length > 0) {
@@ -124,7 +136,7 @@ class MysqlParse extends EventEmitter {
    * @param tableName 需要的表名
    * @param where 以及查询的条件
    */
-  async findOne(fields: IField[], tableName: string, where: IRecords): Promise<any> {
+  async findOne(fields: IFieldOptions[], tableName: string, where: IRecords): Promise<any> {
     const { sql, data } = await this.comQuery(fields, tableName, where)
     this.logRecords(sql)
 
@@ -138,7 +150,7 @@ class MysqlParse extends EventEmitter {
    * @param tableName 需要的表名
    * @param where 以及查询的条件
    */
-  async find(fields: IField[], tableName: string, where: IRecords): Promise<any> {
+  async find(fields: IFieldOptions[], tableName: string, where: IRecords): Promise<any> {
     const { sql, data } = await this.comQuery(fields, tableName, where)
     this.logRecords(sql)
     return data

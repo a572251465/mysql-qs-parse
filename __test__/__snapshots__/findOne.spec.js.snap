@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`findOne 测试 findOne 测试数据 1`] = `
+Object {
+  "type": "work-platform",
+  "visitNum": Any<Number>,
+}
+`;

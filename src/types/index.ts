@@ -8,6 +8,8 @@ export interface IField<T = string | IRecords> {
   [keyName: string]: T
 }
 
+export type IFieldOptions = IField | string
+
 export interface IResultRecords {
   RowDataPacket: IRecords
 }
