@@ -133,7 +133,7 @@ class MysqlParse extends EventEmitter {
 
       if (limit && typeof limit === 'object' && Object.keys(limit).length > 0) {
         let { page = undefined, limit: nums = undefined } = limit
-        if (page === undefined) page = 1
+        if (page === undefined) page = 0
         if (nums === undefined) nums = 100000
         sql += ` limit ${page},${nums}`
       }
@@ -226,7 +226,7 @@ class MysqlParse extends EventEmitter {
         tableName: string | undefined = undefined,
         where: IRecords | undefined = undefined,
         order: IField = {},
-        limit: ILimitOptions = { page: 1, limit: 100000 }
+        limit: ILimitOptions = { page: 0, limit: 100000 }
 
       // 判断参数是依次传递 还是按对象传递
       if (isObject(paramOptions)) {
