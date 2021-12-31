@@ -156,6 +156,31 @@ class MysqlParse extends EventEmitter {
 
   /**
    * @author lihh
+   * @description 查询数据条数
+   * @param tableName 表示表名
+   * @param where 表示条件
+   */
+  async size(tableName: string, where?: IRecords): Promise<any> {
+    try {
+      // 判断字段是否为空
+      isNullCheck(tableName, `表名 size`, INumeralTypes.ONE)
+      where && isNullCheck(where, `${tableName} size`, INumeralTypes.TWO)
+
+      // 判断字段是否有效
+      where && checkFieldsType(where, ['object'], tableName)
+
+      const { sql, data } = await this.comQuery([{ 'count(*)': 'nums' }], tableName, where)
+      this.logRecords(sql)
+
+      return data.length > 0 ? data[0]['nums'] : 0
+    } catch (e) {
+      this.emit('error', e)
+      throw e
+    }
+  }
+
+  /**
+   * @author lihh
    * @description 进行单个数据查询
    * @param fields 查询的字段
    * @param tableName 需要的表名

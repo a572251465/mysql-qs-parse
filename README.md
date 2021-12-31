@@ -120,6 +120,11 @@ db.release()
 * `release`
   * 每次执行mysql操作的时候，都会创建连接，每次执行结束后释放连接，但是考虑到用户可能一个连接执行多次sql，所以释放连接的功能暴露出去
   * 每次执行结束后执行`release`函数，记得下次请求前一定要重新执行`open`函数
+* `size(tableName, where)`
+  * 该函数用来查询表中的条数，其实就是count语句。
+  * **`tableName`属性表示查询的表**
+  * **`where`属性表示查询的条件。可选参数**
+  * 返回结果直接就是查询的条数，如果没有数据直接返回0
 * **<font color=red>后续还有很多功能推出(例如：多表查询，复杂查询等)...</font>**
 ## QA
 * 使用插件后，在查询的时候出现错误（mysql PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR）
