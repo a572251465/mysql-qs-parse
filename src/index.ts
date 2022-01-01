@@ -156,6 +156,25 @@ class MysqlParse extends EventEmitter {
 
   /**
    * @author lihh
+   * @description 提供了原生的查询sql的能力，修改结构为promise
+   * @param sql 传递的sql
+   */
+  query(sql: string) {
+    return new Promise((resolve, reject) => {
+      this.db?.query(sql, (err, results) => {
+        if (err) {
+          this.emit('error', err)
+          reject(false)
+          return
+        }
+
+        resolve(results)
+      })
+    })
+  }
+
+  /**
+   * @author lihh
    * @description 查询数据条数
    * @param tableName 表示表名
    * @param where 表示条件

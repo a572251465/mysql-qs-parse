@@ -126,6 +126,9 @@ db.release()
   * **`where`属性表示查询的条件。可选参数**
   * 返回结果直接就是查询的条数，如果没有数据直接返回0
 * **<font color=red>后续还有很多功能推出(例如：多表查询，复杂查询等)...</font>**
+* `query(sql)`
+  * 该函数提供了原生的mysql查询方式，可以提供一些比较复杂的多表查询等操作
+  * 只不过本函数实现了promise，可以通过同步的方式来处理
 ## QA
 * 使用插件后，在查询的时候出现错误（mysql PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR）
   * answer: [参照mysql issues](https://github.com/mysqljs/mysql/issues/1166)

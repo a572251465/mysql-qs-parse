@@ -1,6 +1,6 @@
 {
   "name": "mysql-qs-parse",
-  "version": "2.3.9",
+  "version": "2.4.9",
   "description": "",
   "main": "dist/index.js",
   "scripts": {
