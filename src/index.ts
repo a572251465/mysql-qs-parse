@@ -306,14 +306,16 @@ class MysqlParse extends EventEmitter {
     // 执行sql
     const values = Array.from({ length: Object.keys(fields).length }, () => '?').join(',')
     const sql = `insert into ${tableName} (${Object.keys(fields).join(',')}) values (${values})`
+    this.logRecords(sql)
+
     return new Promise((resolve, reject) => {
-      this.db?.query(sql, Object.values(fields), (err) => {
+      this.db?.query(sql, Object.values(fields), (err, results: mysql.OkPacket) => {
         if (err) {
           this.emit('error', err)
           return reject(0)
         }
 
-        resolve(1)
+        resolve(results.affectedRows)
       })
     })
   }
@@ -344,14 +346,16 @@ class MysqlParse extends EventEmitter {
     const sql = `update ${tableName} set ${commonSplicing(replaceValues(fields, '?'))} ${sqlWhereSplicing(
       replaceValues(where, '?')
     )}`
+    this.logRecords(sql)
+
     return new Promise((resolve, reject) => {
-      this.db?.query(sql, modSqlParams, (err, results: number) => {
+      this.db?.query(sql, modSqlParams, (err, results: mysql.OkPacket) => {
         if (err) {
           this.emit('error', err, sql)
           return reject(0)
         }
 
-        resolve(1)
+        resolve(results.affectedRows)
       })
     })
   }
@@ -379,20 +383,22 @@ class MysqlParse extends EventEmitter {
     }
 
     // 判断是否是逻辑删除
-    if (!fields) {
+    if (fields) {
       return this.update(fields!, tableName, where)
     }
 
     // 进行表的删除
     const sql = `delete from ${tableName} ${sqlWhereSplicing(where)}`
+    this.logRecords(sql)
+
     return new Promise((resolve, reject) => {
-      this.db?.query(sql, (err, results: number) => {
+      this.db?.query(sql, (err, results: mysql.OkPacket) => {
         if (err) {
           this.emit('error', err, sql)
           return reject(0)
         }
 
-        resolve(1)
+        resolve(results.affectedRows)
       })
     })
   }

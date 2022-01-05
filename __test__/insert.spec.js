@@ -17,6 +17,7 @@ test('insert 测试', async () => {
     {
       id: +new Date(),
       username: '2495041749@qq.com',
+      nickName: '李浩浩',
       password:
         'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJkYXRhIjoiMTIzNDU2IiwiaWF0IjoxNjQwOTM5MDY0fQ.euoWgJcJ-n6B8uIcaguEdqMJyUMiRYbVr8o7UDSCiZs',
       active: 1,
