@@ -92,7 +92,7 @@ const checkFieldsType = (
   }
 
   for (const item of content as ICheckOptions[]) {
-    const type = getTypes(item)
+    const type = getTypes(item)[0]
     if (!expectTypes.includes(type)) {
       throw new TypeError(
         ` For table <${tableName}>, the field type should be ${expectTypes.join(' | ')}, but type ${type} appears `
