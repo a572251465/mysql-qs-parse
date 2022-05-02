@@ -40,7 +40,8 @@ declare class SqlParse {
   find(fields: IFieldOptions[], tableName: string, where?: IRecords): Promise<IRecords[]>
   find(fields: IFindOptions): Promise<IRecords[]>
   insert(fields: IRecords, tableName: string): Promise<number>
-  update(fields: IRecords, tableName: string, where: IRecords): Promise<number>,
+  update(fields: IRecords, tableName: string, where: IRecords): Promise<number>
+  delete(tableName: string, where: IRecords, fields?: IRecords): Promise<number>
   on(keyName: string, fn: IFn): void
   once(keyName: string, fn: IFn): void
   emit(keyName: string, ...args: any[]): void
