@@ -34,11 +34,11 @@ declare class SqlParse {
 
   open(): Promise<Connection>
   release(): void
-  query(sql: string): Promise<any>
+  query<T = any>(sql: string): Promise<T>
   size(tableName: string, where?: IRecords): Promise<number>
-  findOne(fields: IFieldOptions[], tableName: string, where: IRecords): Promise<IRecords>
-  find(fields: IFieldOptions[], tableName: string, where?: IRecords): Promise<IRecords[]>
-  find(fields: IFindOptions): Promise<IRecords[]>
+  findOne<T = IRecords>(fields: IFieldOptions[], tableName: string, where: IRecords): Promise<T>
+  find<T = IRecords>(fields: IFieldOptions[], tableName: string, where?: IRecords): Promise<T[]>
+  find<T = IRecords>(fields: IFindOptions): Promise<T[]>
   insert(fields: IRecords, tableName: string): Promise<number>
   update(fields: IRecords, tableName: string, where: IRecords): Promise<number>
   delete(tableName: string, where: IRecords, fields?: IRecords): Promise<number>
